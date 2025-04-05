@@ -1,0 +1,37 @@
+services:
+    nginx:
+        image: nginx:1.27.0-alpine
+        container_name: g_niaz_nginx
+        volumes:
+            - "./docker/nginx/conf:/etc/nginx/conf.d"
+            - ./html:/var/www/html
+            - "./logs/nginx:/var/log/nginx"
+        ports:
+            - "80:80"
+            - "8080:8080"
+        links:
+            - php
+
+    php:
+        build:
+          context: docker/php
+          dockerfile: Dockerfile
+        container_name: g_niaz_php
+        restart: unless-stopped
+        environment:
+          PHP_IDE_CONFIG: "serverName=Docker"
+          XDEBUG_CONFIG: remote_host=host.docker.internal
+        volumes:
+            - ./html:/var/www/html
+            - ./logs/php:/var/log/php
+
+    database:
+        image: postgres:17.4-bookworm
+        container_name: g_niaz_postgres
+        hostname: database
+        restart: always
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_DB: db_postgres
+            POSTGRES_PASSWORD: W5d1s2d5f1f2
