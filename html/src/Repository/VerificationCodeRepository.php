@@ -5,39 +5,64 @@ namespace App\Repository;
 use App\Entity\VerificationCode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\DBAL\Connection;
 
 /**
  * @extends ServiceEntityRepository<VerificationCode>
  */
 class VerificationCodeRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private $connection;
+
+    public function __construct(Connection $connection)
     {
-        parent::__construct($registry, VerificationCode::class);
+        $this->connection = $connection;
     }
 
-    //    /**
-    //     * @return VerificationCode[] Returns an array of VerificationCode objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('v.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findById(int $id
+    ): ?object
+    {
+        $sql = 'SELECT * FROM verification_codes WHERE id = :id';
+        $stmt = $this->connection->prepare($sql);
+        $stmt->executeQuery(['id' => $id]);
 
-    //    public function findOneBySomeField($value): ?VerificationCode
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        return $stmt->fetchAssociative();
+    }
+
+    public function save($verificationCode)
+    {
+        $this->connection->insert('verification_codes', [
+            'phone' => $verificationCode->getPhone(),
+            'code' => $verificationCode->getCode(),
+            'token' => $verificationCode->getToken(),
+            'created_at' => $verificationCode->getCreatedAt()->format('Y-m-d H:i:s'),
+            'updated_at' => $verificationCode->getUpdatedAt()->format('Y-m-d H:i:s'),
+            'count' => $verificationCode->getCount(),
+        ]);
+    }
+
+    public function update($verificationCode)
+    {
+        $this->connection->update('verification_codes', [
+            'phone' => $verificationCode->getPhone(),
+            'code' => $verificationCode->getCode(),
+            'token' => $verificationCode->getToken(),
+            'updated_at' => $verificationCode->getUpdatedAt()->format('Y-m-d H:i:s'),
+            'count' => $verificationCode->getCount(),
+        ], ['id' => $verificationCode->getId()]);
+    }
+
+    public function delete($id)
+    {
+        $this->connection->delete('verification_codes', ['id' => $id]);
+    }
+
+    public function findByPhone($phone)
+    {
+        $sql = 'SELECT * FROM verification_codes WHERE phone = :phone';
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute(['phone' => $phone]);
+
+        return $stmt->fetchAll();
+    }
 }
