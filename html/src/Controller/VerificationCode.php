@@ -2,8 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
-use App\Entity\PhoneVerification;
+use App\Service\VerificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,7 +13,10 @@ class VerificationCode extends AbstractController
 {
     private EntityManagerInterface $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        private VerificationService $verificationService
+    )
     {
         $this->entityManager = $entityManager;
     }
@@ -23,11 +25,13 @@ class VerificationCode extends AbstractController
     public function requestCode(Request $request): JsonResponse
     {
         $phone = $request->request->get('phone');
+        $phone = '+79657584444';
+        $verificationCode = $this->verificationService->requestVerificationCode($phone);
 
         // Логика проверки и генерации кода
         // Проверка на количество запросов и генерация кода...
 
-        return new JsonResponse(['code' => 'k']);
+        return new JsonResponse(['phone' => $verificationCode->getPhone(), 'code' => $verificationCode->getCode(), 'token' => $verificationCode->getToken()]);
     }
 
     /**

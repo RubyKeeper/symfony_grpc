@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\VerificationCode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\DBAL\Connection;
 
@@ -29,16 +30,29 @@ class VerificationCodeRepository extends ServiceEntityRepository
         return $stmt->fetchAssociative();
     }
 
+    /**
+     * @throws Exception
+     */
     public function save($verificationCode)
     {
-        $this->connection->insert('verification_codes', [
-            'phone' => $verificationCode->getPhone(),
-            'code' => $verificationCode->getCode(),
-            'token' => $verificationCode->getToken(),
-            'created_at' => $verificationCode->getCreatedAt()->format('Y-m-d H:i:s'),
-            'updated_at' => $verificationCode->getUpdatedAt()->format('Y-m-d H:i:s'),
-            'count' => $verificationCode->getCount(),
-        ]);
+        $queryBuilder = $this->connection->createQueryBuilder()->insert('verification_code')
+            ->values([
+                'phone'=> ':phone',
+                'code' => ':code',
+                'token' => ':token',
+                'created_at' => ':createdAt',
+                'updated_at' => ':updatedAt',
+                'count' => ':count',
+            ])
+            ->setParameters([
+                'phone' => $verificationCode->getPhone(),
+                'code' => $verificationCode->getCode(),
+                'token' => $verificationCode->getToken(),
+                'createdAt' => $verificationCode->getCreatedAt()->format('Y-m-d H:i:s'),
+                'updatedAt' => $verificationCode->getUpdatedAt()->format('Y-m-d H:i:s'),
+                'count' => $verificationCode->getCount(),
+            ]);
+        $queryBuilder->executeQuery();
     }
 
     public function update($verificationCode)
@@ -59,10 +73,29 @@ class VerificationCodeRepository extends ServiceEntityRepository
 
     public function findByPhone($phone)
     {
-        $sql = 'SELECT * FROM verification_codes WHERE phone = :phone';
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute(['phone' => $phone]);
+        $queryBuilder = $this->connection->createQueryBuilder()
+            ->select('*')
+            ->from('verification_code')
+            ->where('phone = :phone')
+            ->andWhere('updated_at > :updatedAt')
+            ->setParameter('phone', $phone)
+            ->setParameter('updatedAt', (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s'))
+        ->setMaxResults(1);
+        return $queryBuilder->executeQuery()->fetchAssociative();
+    }
 
-        return $stmt->fetchAll();
+    /**
+     * Инкрементно обновляет количество вызовов
+     * @param $id
+     * @return void
+     * @throws Exception
+     */
+    public function updateCount($id) {
+        $queryBuilder = $this->connection->createQueryBuilder()
+            ->update('verification_code')
+            ->set('count', 'count+1')
+            ->where('id = :id')
+            ->setParameter('id', $id);
+        $queryBuilder->executeQuery();
     }
 }
