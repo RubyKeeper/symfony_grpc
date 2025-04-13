@@ -4,98 +4,112 @@ namespace App\Repository;
 
 use App\Entity\VerificationCode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\DBAL\Exception;
-use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 
 /**
  * @extends ServiceEntityRepository<VerificationCode>
  */
 class VerificationCodeRepository extends ServiceEntityRepository
 {
-    private $connection;
-
-    public function __construct(Connection $connection)
-    {
-        $this->connection = $connection;
-    }
-
-    public function findById(int $id
-    ): ?object
-    {
-        $sql = 'SELECT * FROM verification_codes WHERE id = :id';
-        $stmt = $this->connection->prepare($sql);
-        $stmt->executeQuery(['id' => $id]);
-
-        return $stmt->fetchAssociative();
-    }
+    public function __construct(
+        private readonly Connection $connection,
+    ) {}
 
     /**
      * @throws Exception
      */
-    public function save($verificationCode)
+    public function save(VerificationCode $verificationCode)
     {
-        $queryBuilder = $this->connection->createQueryBuilder()->insert('verification_code')
+        $queryBuilder = $this->connection
+            ->createQueryBuilder()->insert('verification_code')
             ->values([
-                'phone'=> ':phone',
-                'code' => ':code',
-                'token' => ':token',
+                'phone'      => ':phone',
+                'code'       => ':code',
+                'token'      => ':token',
                 'created_at' => ':createdAt',
-                'updated_at' => ':updatedAt',
-                'count' => ':count',
+                'count'      => ':count',
             ])
             ->setParameters([
-                'phone' => $verificationCode->getPhone(),
-                'code' => $verificationCode->getCode(),
-                'token' => $verificationCode->getToken(),
-                'createdAt' => $verificationCode->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updatedAt' => $verificationCode->getUpdatedAt()->format('Y-m-d H:i:s'),
-                'count' => $verificationCode->getCount(),
+                'phone'     => $verificationCode->getPhone(),
+                'code'      => $verificationCode->getCode(),
+                'token'     => $verificationCode->getToken(),
+                'createdAt' => $verificationCode->getCreatedAt()->format(
+                    'Y-m-d H:i:s',
+                ),
+                'count'     => $verificationCode->getCount(),
             ]);
         $queryBuilder->executeQuery();
     }
 
-    public function update($verificationCode)
-    {
-        $this->connection->update('verification_codes', [
-            'phone' => $verificationCode->getPhone(),
-            'code' => $verificationCode->getCode(),
-            'token' => $verificationCode->getToken(),
-            'updated_at' => $verificationCode->getUpdatedAt()->format('Y-m-d H:i:s'),
-            'count' => $verificationCode->getCount(),
-        ], ['id' => $verificationCode->getId()]);
-    }
-
     public function delete($id)
     {
-        $this->connection->delete('verification_codes', ['id' => $id]);
+        $this->connection->delete('verification_code', ['id' => $id]);
     }
 
     public function findByPhone($phone)
     {
-        $queryBuilder = $this->connection->createQueryBuilder()
+        $queryBuilder = $this->connection
+            ->createQueryBuilder()
             ->select('*')
             ->from('verification_code')
             ->where('phone = :phone')
-            ->andWhere('updated_at > :updatedAt')
+            ->andWhere('created_at > :createdAt')
             ->setParameter('phone', $phone)
-            ->setParameter('updatedAt', (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s'))
-        ->setMaxResults(1);
+            ->setParameter(
+                'createdAt',
+                (new \DateTimeImmutable('- 1 minute'))->format('Y-m-d H:i:s'),
+            )
+            ->setMaxResults(1);
+        return $queryBuilder->executeQuery()->fetchAssociative();
+    }
+
+    public function findByTokenAndCode(string $token, string $code)
+    {
+        $queryBuilder = $this->connection
+            ->createQueryBuilder()
+            ->select('*')
+            ->from('verification_code')
+            ->where('token = :token')
+            ->where('code = :code')
+            ->andWhere('created_at > :createdAt')
+            ->setParameter('token', $token)
+            ->setParameter('code', $code)
+            ->setParameter(
+                'createdAt',
+                (new \DateTimeImmutable('- 1 minute'))->format('Y-m-d H:i:s'),
+            )
+            ->setMaxResults(1);
         return $queryBuilder->executeQuery()->fetchAssociative();
     }
 
     /**
      * Инкрементно обновляет количество вызовов
+     *
      * @param $id
+     *
      * @return void
      * @throws Exception
      */
-    public function updateCount($id) {
-        $queryBuilder = $this->connection->createQueryBuilder()
-            ->update('verification_code')
-            ->set('count', 'count+1')
-            ->where('id = :id')
-            ->setParameter('id', $id);
-        $queryBuilder->executeQuery();
+    public function updateCount(int $id)
+    {
+        $sql = 'update verification_code set count = count+1 where id = :id';
+        $stmt = $this->connection->prepare($sql);
+        $stmt->executeQuery(['id' => $id]);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function getCount(string $phone): ?int {
+        $queryBuilder = $this->connection
+        ->createQueryBuilder()
+            ->select('sum(count)')
+            ->from('verification_code')
+            ->where('phone = :phone')
+            ->andWhere('created_at > :createdAt')
+            ->setParameter('phone', $phone)
+            ->setParameter('createdAt', (new \DateTimeImmutable('- 15 minute'))->format('Y-m-d H:i:s'),);
+        return $queryBuilder->executeQuery()->fetchOne();
     }
 }

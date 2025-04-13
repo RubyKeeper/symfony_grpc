@@ -15,22 +15,19 @@ class VerificationCode
     private int $id;
 
     #[ORM\Column(length: 15)]
-    private ?string $phone = null;
+    private ?string $phone;
 
     #[ORM\Column]
-    private ?int $code = null;
+    private ?int $code;
 
     #[ORM\Column(length: 255)]
-    private ?string $token = null;
+    private ?string $token;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $updatedAt = null;
-
-    #[ORM\Column]
-    private ?int $count = null;
+    private ?int $count;
 
     /**
      * @throws RandomException
@@ -40,8 +37,7 @@ class VerificationCode
         $this->phone = $phone;
         $this->code = rand(1000, 9999);
         $this->token = bin2hex(random_bytes(16));
-        $this->createdAt = new \DateTimeImmutable(); // Устанавливаем время создания
-        $this->updatedAt = new \DateTimeImmutable('+ 1 minute');
+        $this->createdAt = new \DateTimeImmutable();
         $this->count = 1;
     }
 
@@ -62,17 +58,12 @@ class VerificationCode
         return $this->phone;
     }
 
-    public function setPhone(string $phone): static
-    {
-        $this->phone = $phone;
-
-        return $this;
-    }
-
     public function getCode(): ?int
     {
-        if ((new \DateTimeImmutable())->getTimestamp() > $this->updatedAt->getTimestamp()) {
-            $this->updatedAt = new \DateTimeImmutable('+ 1 minute');
+        // если прошло больше 1 минуты, то генерируем новый код
+        if ((new \DateTimeImmutable('- 1 minute'))->getTimestamp()
+            > $this->createdAt->getTimestamp()
+        ) {
             $this->code = rand(1000, 9999);
             $this->count++;
         }
@@ -110,17 +101,6 @@ class VerificationCode
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
-    }
 
     public function getCount(): ?int
     {
