@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Service\VerificationService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,40 +10,64 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class VerificationCode extends AbstractController
 {
-    private EntityManagerInterface $entityManager;
-
     public function __construct(
-        EntityManagerInterface $entityManager,
-        private VerificationService $verificationService
-    )
-    {
-        $this->entityManager = $entityManager;
-    }
+        private readonly VerificationService $verificationService,
+    ) {}
 
-    #[Route('/api/request-code', name: 'blog_list')]
+    /**
+     * Генерация кода
+     *
+     * @param Request $request
+     *
+     * @return JsonResponse
+     * @throws \Random\RandomException
+     */
+    #[Route('/api/request-code', methods: ['POST'])]
     public function requestCode(Request $request): JsonResponse
     {
         $phone = $request->request->get('phone');
-        $phone = '+79657584444';
-        $verificationCode = $this->verificationService->requestVerificationCode($phone);
+        try {
+            $verificationCode
+                = $this->verificationService->requestVerificationCode(
+                $phone,
+            );
+        } catch (\Exception $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()],
+                $exception->getCode());
+        }
 
-        // Логика проверки и генерации кода
-        // Проверка на количество запросов и генерация кода...
-
-        return new JsonResponse(['phone' => $verificationCode->getPhone(), 'code' => $verificationCode->getCode(), 'token' => $verificationCode->getToken()]);
+        return new JsonResponse(
+            [
+                'phone' => $verificationCode->getPhone(),
+                'code'  => $verificationCode->getCode(),
+                'token' => $verificationCode->getToken(),
+            ],
+        );
     }
 
     /**
-     * @Route("/api/verify-code", methods={"POST"})
+     * Верификация кода
+     *
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
+    #[Route('/api/verify-code', methods: ['POST'])]
     public function verifyCode(Request $request): JsonResponse
     {
-        $phone = $request->request->get('phone');
+        $token = $request->request->get('token');
         $code = $request->request->get('code');
 
-        // Логика проверки кода
-        // Если код верный, проверяем, есть ли пользователь с таким номером телефона...
+        try {
+            $verificationCode = $this->verificationService->verifyCode(
+                $token,
+                $code,
+            );
+        } catch (\Exception $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()],
+                $exception->getCode());
+        }
 
-        return new JsonResponse(['message' => 'k']);
+        return new JsonResponse($verificationCode);
     }
 }
