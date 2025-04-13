@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250410041934 extends AbstractMigration
+final class Version20250413144327 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -27,13 +27,10 @@ final class Version20250410041934 extends AbstractMigration
             COMMENT ON COLUMN "users".created_at IS '(DC2Type:datetime_immutable)'
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE TABLE verification_code (id SERIAL NOT NULL, phone VARCHAR(15) NOT NULL, code INT NOT NULL, token VARCHAR(255) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, count INT NOT NULL, PRIMARY KEY(id))
+            CREATE TABLE verification_code (id SERIAL NOT NULL, phone VARCHAR(15) NOT NULL, code INT NOT NULL, token VARCHAR(255) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, count INT NOT NULL, PRIMARY KEY(id))
         SQL);
         $this->addSql(<<<'SQL'
             COMMENT ON COLUMN verification_code.created_at IS '(DC2Type:datetime_immutable)'
-        SQL);
-        $this->addSql(<<<'SQL'
-            COMMENT ON COLUMN verification_code.updated_at IS '(DC2Type:datetime_immutable)'
         SQL);
     }
 
