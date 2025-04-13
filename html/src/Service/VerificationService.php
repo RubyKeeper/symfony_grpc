@@ -64,7 +64,7 @@ class VerificationService
         }
     }
 
-    public function verifyCode(?string $token, ?string $code): VerificationCode
+    public function verifyCode(?string $token, ?string $code): array
     {
         $constraints = new Constraints\Collection([
             'code' => [
