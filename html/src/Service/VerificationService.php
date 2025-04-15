@@ -15,20 +15,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class VerificationService
 {
-    private $userRepository;
-    private $verificationCodeRepository;
-    private $validator;
-
     public function __construct(
-        ValidatorInterface $validator,
-        UserRepository $userRepository,
-        VerificationCodeRepository $verificationCodeRepository,
+        private readonly ValidatorInterface $validator,
+        private readonly UserRepository $userRepository,
+        private readonly VerificationCodeRepository $verificationCodeRepository,
         private readonly BlockPhoneRepository $blockPhoneRepository,
-    ) {
-        $this->validator = $validator;
-        $this->userRepository = $userRepository;
-        $this->verificationCodeRepository = $verificationCodeRepository;
-    }
+    ) {}
 
     /**
      * @throws RandomException
@@ -67,7 +59,7 @@ class VerificationService
     public function verifyCode(?string $token, ?string $code): array
     {
         $constraints = new Constraints\Collection([
-            'code' => [
+            'code'  => [
                 new Constraints\NotBlank(message: 'Код не должен быть пустым'),
                 new Constraints\Length(
                     4,
