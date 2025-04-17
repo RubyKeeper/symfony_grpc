@@ -14,10 +14,10 @@ class BlockPhone
     private int $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $phone = null;
+    private ?string $phone;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $blockAt = null;
+    private ?\DateTimeImmutable $blockAt;
 
     /**
      * @param string|null $phone
@@ -28,40 +28,8 @@ class BlockPhone
         $this->blockAt = new \DateTimeImmutable('+ 1 hour');
     }
 
-
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
-
-    public function setPhone(string $phone): static
-    {
-        $this->phone = $phone;
-
-        return $this;
-    }
-
-    public function getBlockAt(): ?\DateTimeImmutable
-    {
-        return $this->blockAt;
-    }
-
-    public function setBlockAt(\DateTimeImmutable $blockAt): static
-    {
-        $this->blockAt = $blockAt;
-
-        return $this;
     }
 }
