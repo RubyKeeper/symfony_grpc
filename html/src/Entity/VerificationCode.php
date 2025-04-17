@@ -46,13 +46,6 @@ class VerificationCode
         return $this->id;
     }
 
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
     public function getPhone(): ?string
     {
         return $this->phone;
@@ -70,7 +63,7 @@ class VerificationCode
         return $this->code;
     }
 
-    public function setCode(int $code): static
+    public function setCode(int $code): self
     {
         $this->code = $code;
 
@@ -82,7 +75,7 @@ class VerificationCode
         return $this->token;
     }
 
-    public function setToken(string $token): static
+    public function setToken(string $token): self
     {
         $this->token = $token;
 
@@ -94,23 +87,8 @@ class VerificationCode
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-
     public function getCount(): ?int
     {
         return $this->count;
-    }
-
-    public function setCount(int $count): static
-    {
-        $this->count = $count;
-
-        return $this;
     }
 }
