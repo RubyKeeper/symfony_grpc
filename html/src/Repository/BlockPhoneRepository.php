@@ -24,12 +24,17 @@ class BlockPhoneRepository extends ServiceEntityRepository
         return $blockPhone;
     }
 
-    public function isBlocked(string $phone) {
-        return $this->createQueryBuilder('b')
+    public function isBlocked(string $phone)
+    {
+        return $this
+            ->createQueryBuilder('b')
             ->andWhere('b.phone = :phone')
             ->andWhere('b.blockAt > :blocked')
             ->setParameter('phone', $phone)
-            ->setParameter('blocked', (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s'))
+            ->setParameter(
+                'blocked',
+                (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s'),
+            )
             ->getQuery()
             ->getOneOrNullResult();
     }

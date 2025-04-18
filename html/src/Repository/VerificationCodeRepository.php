@@ -19,7 +19,7 @@ class VerificationCodeRepository extends ServiceEntityRepository
     /**
      * @throws Exception
      */
-    public function save(VerificationCode $verificationCode)
+    public function save(VerificationCode $verificationCode): void
     {
         $queryBuilder = $this->connection
             ->createQueryBuilder()->insert('verification_code')
@@ -42,9 +42,23 @@ class VerificationCodeRepository extends ServiceEntityRepository
         $queryBuilder->executeQuery();
     }
 
-    public function delete($id)
+    /**
+     * @throws Exception
+     */
+    public function getCount(string $phone): ?int
     {
-        $this->connection->delete('verification_code', ['id' => $id]);
+        $queryBuilder = $this->connection
+            ->createQueryBuilder()
+            ->select('sum(count)')
+            ->from('verification_code')
+            ->where('phone = :phone')
+            ->andWhere('created_at > :createdAt')
+            ->setParameter('phone', $phone)
+            ->setParameter(
+                'createdAt',
+                (new \DateTimeImmutable('- 15 minute'))->format('Y-m-d H:i:s'),
+            );
+        return $queryBuilder->executeQuery()->fetchOne();
     }
 
     public function findByPhone($phone)
@@ -91,25 +105,10 @@ class VerificationCodeRepository extends ServiceEntityRepository
      * @return void
      * @throws Exception
      */
-    public function updateCount(int $id)
+    public function updateCount(int $id): void
     {
         $sql = 'update verification_code set count = count+1 where id = :id';
         $stmt = $this->connection->prepare($sql);
         $stmt->executeQuery(['id' => $id]);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function getCount(string $phone): ?int {
-        $queryBuilder = $this->connection
-        ->createQueryBuilder()
-            ->select('sum(count)')
-            ->from('verification_code')
-            ->where('phone = :phone')
-            ->andWhere('created_at > :createdAt')
-            ->setParameter('phone', $phone)
-            ->setParameter('createdAt', (new \DateTimeImmutable('- 15 minute'))->format('Y-m-d H:i:s'),);
-        return $queryBuilder->executeQuery()->fetchOne();
     }
 }
