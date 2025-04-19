@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\BlockPhone;
 use App\Entity\User;
 use App\Entity\VerificationCode;
+use App\Factory\VerificationCodeFactory;
 use App\Repository\BlockPhoneRepository;
 use App\Repository\UserRepository;
 use App\Repository\VerificationCodeRepository;
@@ -20,6 +21,7 @@ class VerificationService
         private readonly UserRepository $userRepository,
         private readonly VerificationCodeRepository $verificationCodeRepository,
         private readonly BlockPhoneRepository $blockPhoneRepository,
+        private readonly VerificationCodeFactory $verificationCodeFactory,
     ) {}
 
     /**
@@ -34,13 +36,12 @@ class VerificationService
         }
 
         if ($v = $this->verificationCodeRepository->findByPhone($phone)) {
-            $code = new VerificationCode($v['phone']);
-            $code->setCode($v['code']);
-            $code->setToken($v['token']);
             $this->verificationCodeRepository->updateCount($v['id']);
-            return $code;
+            return $this->verificationCodeFactory->createByArray($v);
         }
-        $verificationCode = new VerificationCode($phone);
+        $verificationCode = $this->verificationCodeFactory->createByPhone(
+            $phone,
+        );
         $this->verificationCodeRepository->save($verificationCode);
         return $verificationCode;
     }
