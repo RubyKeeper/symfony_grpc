@@ -89,6 +89,7 @@ class VerificationService
             $code,
         )
         ) {
+            /** @var User $user */
             if ($user = $this->userRepository->findByPhone($v['phone'])) {
                 $id = $user->getId();
                 $return = [
