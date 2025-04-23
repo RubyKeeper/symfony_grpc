@@ -98,6 +98,7 @@ class VerificationService
                 ];
             } else {
                 $user = new User($v['phone']);
+
                 $id = $this->userRepository->insert($user)->getId();
                 $return = [
                     'message' => 'Вы успешно зарегистрировались',
