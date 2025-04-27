@@ -10,7 +10,7 @@ class VerificationCodeFactory
     /**
      * @throws RandomException
      */
-    public function createByArray(array $data): VerificationCode
+    public static function fromArray(array $data): VerificationCode
     {
         $code = new VerificationCode($data['phone']);
         $code->setCode($data['code']);
@@ -21,7 +21,7 @@ class VerificationCodeFactory
     /**
      * @throws RandomException
      */
-    public function createByPhone(string $phone): VerificationCode
+    public static function fromPhone(string $phone): VerificationCode
     {
         return new VerificationCode($phone);
     }

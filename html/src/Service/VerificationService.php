@@ -9,23 +9,24 @@ use App\Factory\VerificationCodeFactory;
 use App\Repository\BlockPhoneRepository;
 use App\Repository\UserRepository;
 use App\Repository\VerificationCodeRepository;
+use Doctrine\DBAL\Exception;
 use Random\RandomException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class VerificationService
+readonly class VerificationService
 {
     public function __construct(
-        private readonly ValidatorInterface $validator,
-        private readonly UserRepository $userRepository,
-        private readonly VerificationCodeRepository $verificationCodeRepository,
-        private readonly BlockPhoneRepository $blockPhoneRepository,
-        private readonly VerificationCodeFactory $verificationCodeFactory,
+        private ValidatorInterface $validator,
+        private UserRepository $userRepository,
+        private VerificationCodeRepository $verificationCodeRepository,
+        private BlockPhoneRepository $blockPhoneRepository,
     ) {}
 
     /**
      * @throws RandomException
+     * @throws Exception
      */
     public function requestVerificationCode(string $phone): VerificationCode
     {
@@ -37,11 +38,10 @@ class VerificationService
 
         if ($v = $this->verificationCodeRepository->findByPhone($phone)) {
             $this->verificationCodeRepository->updateCount($v['id']);
-            return $this->verificationCodeFactory->createByArray($v);
+            return VerificationCodeFactory::fromArray($v);
         }
-        $verificationCode = $this->verificationCodeFactory->createByPhone(
-            $phone,
-        );
+
+        $verificationCode = VerificationCodeFactory::fromPhone($phone);
         $this->verificationCodeRepository->save($verificationCode);
         return $verificationCode;
     }
